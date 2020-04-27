@@ -2,10 +2,12 @@
 //#include "Keyboard.h"
 int currentRandm = 0;
 AccelStepper stepper(1, 9, 10);
-
+char dataString[1] = {'5'};
+boolean iseofnot = false;
+boolean onlyonce = false;
 void setup() {
   // open the serial port:
-  Serial.begin(115200);
+  Serial.begin(9600);
     pinMode(2, OUTPUT);
   pinMode(3, OUTPUT);
   pinMode(4, OUTPUT);
@@ -26,7 +28,7 @@ void setup() {
 
   pinMode(12, INPUT);
   pinMode(11, INPUT);
-
+//  sprintf(dataString,"%02X","5"); // convert a value to hexa 
   stepper.setMaxSpeed(10000);//1100
   stepper.setAcceleration(11000);
   stepper.moveTo(0);
@@ -34,13 +36,23 @@ void setup() {
 }
 
 void loop() {
-
+  
   bool gear = digitalRead(11);
   bool senseifReady = digitalRead(12);
-  
-  if (stepper.currentPosition() > 800 && senseifReady == true) {
+
+// stepper.currentPosition() > 800 && 
+  if (stepper.currentPosition() > 700 && senseifReady == true && !iseofnot) {
     stepper.setCurrentPosition(0);
-    Serial.println("sensei check");
+    Serial.println("5");
+    iseofnot = true;
+    onlyonce = false;
+//    Serial.println("sensei check");
+//    Serial.write("5");
+  }
+
+  if (senseifReady == false) {
+    iseofnot = false;
+    
   }
 
     digitalWrite(13, gear); 
@@ -49,21 +61,26 @@ void loop() {
   if (Serial.available() > 0) {
     // read incoming serial data:
     char inChar = Serial.read();
-    if (stepper.currentPosition() > 800) {
+    
+    if (stepper.currentPosition() > 700 ) {
+      if(!onlyonce){
+        onlyonce = true;
         digitalWrite(8, LOW); 
         delay(40);
-        digitalWrite(8, HIGH); 
+        digitalWrite(8, HIGH);
+      }
+         
         return;
     }
     if(inChar == '2') {
-        Serial.println("in if");
+//        Serial.println("in if");
         digitalWrite(8, LOW); 
         delay(40);
         stepper.moveTo(stepper.currentPosition() + 10);
         stepper.runToPosition();
         digitalWrite(8, HIGH); 
     } else {
-      Serial.println("else");
+//      Serial.println("else");
       currentRandm = random(2,8);
         
         digitalWrite(currentRandm, LOW); 
@@ -74,7 +91,7 @@ void loop() {
      
     }
 
-    Serial.println(stepper.currentPosition());
+//    Serial.println(stepper.currentPosition());
     // Type the next ASCII value from what you received:
 //    Keyboard.write(inChar + 1);
   }
